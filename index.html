@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>全球实时播报</title>
+  <meta name="description" content="全球实时新闻播报（GitHub Pages 版），自动刷新，可点开原文。" />
+  <style>
+    :root{
+      --bg:#0b1020;--panel:rgba(255,255,255,.06);--line:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);--muted:rgba(255,255,255,.62);
+      --accent:#7c5cff;--ok:#22c55e;--err:#ef4444;--r:16px;--rs:12px;
+      --shadow:0 14px 40px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--text);
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+      background:
+        radial-gradient(1000px 400px at 10% 10%, rgba(124,92,255,.28), transparent 55%),
+        radial-gradient(900px 420px at 90% 0%, rgba(34,197,94,.18), transparent 60%),
+        radial-gradient(900px 600px at 50% 100%, rgba(59,130,246,.16), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter:blur(10px);
+      background:linear-gradient(to bottom, rgba(11,16,32,.92), rgba(11,16,32,.65));
+      border-bottom:1px solid var(--line);
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:18px}
+    .brand{display:flex;gap:14px;align-items:center}
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.5), transparent 45%),
+               linear-gradient(135deg, rgba(124,92,255,1), rgba(34,197,94,.9));
+      box-shadow:var(--shadow); border:1px solid rgba(255,255,255,.18);
+    }
+    h1{margin:0;font-size:20px}
+    .sub{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-top:12px}
+    label{display:grid;gap:6px;min-width:140px}
+    label.grow{flex:1 1 260px;min-width:220px}
+    label span{font-size:12px;color:var(--muted)}
+    select,input{
+      height:40px;border-radius:var(--rs);border:1px solid var(--line);
+      background:rgba(255,255,255,.06);color:var(--text);padding:0 12px;outline:none
+    }
+    input::placeholder{color:rgba(255,255,255,.45)}
+    .btn{
+      height:40px;border-radius:var(--rs);border:1px solid rgba(255,255,255,.16);
+      background:linear-gradient(135deg, rgba(124,92,255,1), rgba(124,92,255,.75));
+      color:#fff;padding:0 14px;cursor:pointer;
+      box-shadow:0 10px 24px rgba(124,92,255,.18);
+    }
+    main{max-width:1100px;margin:0 auto;padding:18px}
+    .status{
+      display:flex;gap:10px;align-items:center;padding:12px 14px;
+      border:1px solid var(--line);background:var(--panel);border-radius:var(--r)
+    }
+    .dot{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.35)}
+    body[data-status="loading"] .dot{background:var(--accent)}
+    body[data-status="ok"] .dot{background:var(--ok)}
+    body[data-status="error"] .dot{background:var(--err)}
+    .muted{color:var(--muted);font-size:13px}
+    ol{list-style:none;padding:0;margin:14px 0 40px;display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width:920px){ol{grid-template-columns:1fr 1fr}}
+    .card{
+      border:1px solid var(--line);
+      background:linear-gradient(to bottom, var(--panel), rgba(255,255,255,.03));
+      border-radius:var(--r);overflow:hidden;
+      box-shadow:0 10px 30px rgba(0,0,0,.22);
+    }
+    .card[data-new="1"]{border-color:rgba(34,197,94,.45);box-shadow:0 10px 30px rgba(34,197,94,.12)}
+    a{display:block;padding:14px 14px 16px;text-decoration:none;color:inherit}
+    .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+    .badge{font-size:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:4px 8px;border-radius:999px}
+    time{margin-left:auto;font-size:12px;color:var(--muted)}
+    h2{margin:0;font-size:16px;line-height:1.45}
+    .hint{margin-top:10px;color:rgba(255,255,255,.68);font-size:13px}
+  </style>
+</head>
+<body data-status="idle">
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>全球实时播报</h1>
+        <p class="sub">GitHub Pages 静态部署 · 自动刷新 · 点击直达原文 · 数据源：GDELT</p>
+      </div>
+    </div>
+
+    <div class="controls" aria-label="筛选与刷新设置">
+      <label>
+        <span>范围</span>
+        <select id="scope">
+          <option value="zh" selected>中文来源（推荐）</option>
+          <option value="all">全部语言来源</option>
+        </select>
+      </label>
+
+      <label class="grow">
+        <span>关键词</span>
+        <input id="query" type="text" placeholder="例如：中东 / AI / 经济" />
+      </label>
+
+      <label>
+        <span>条数</span>
+        <select id="max">
+          <option value="20">20</option>
+          <option value="30" selected>30</option>
+          <option value="50">50</option>
+          <option value="80">80</option>
+        </select>
+      </label>
+
+      <label>
+        <span>刷新</span>
+        <select id="interval">
+          <option value="0">手动</option>
+          <option value="15" selected>15 秒</option>
+          <option value="30">30 秒</option>
+          <option value="60">60 秒</option>
+        </select>
+      </label>
+
+      <button id="refresh" class="btn" type="button">立即刷新</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="status" role="status" aria-live="polite">
+    <span id="statusText">准备就绪</span>
+    <span class="dot" aria-hidden="true"></span>
+    <span id="updatedAt" class="muted">—</span>
+  </div>
+
+  <ol id="list" aria-label="播报列表"></ol>
+</main>
+
+<template id="tpl">
+  <li class="card">
+    <a class="cardLink" target="_blank" rel="noopener noreferrer">
+      <div class="meta">
+        <span class="badge domain"></span>
+        <span class="badge country"></span>
+        <time class="time"></time>
+      </div>
+      <h2 class="headline"></h2>
+      <div class="hint">打开原报道页面 →</div>
+    </a>
+  </li>
+</template>
+
+<script>
+  const el = (id) => document.getElementById(id);
+  const scopeEl = el("scope");
+  const queryEl = el("query");
+  const maxEl = el("max");
+  const intervalEl = el("interval");
+  const refreshBtn = el("refresh");
+  const statusTextEl = el("statusText");
+  const updatedAtEl = el("updatedAt");
+  const listEl = el("list");
+  const tpl = el("tpl");
+
+  const STORAGE_KEY = "global-briefing:ghpages:v1";
+  let timer = null;
+  let inflight = null;
+  let lastUrls = new Set();
+
+  function setStatus(text, kind = "idle") {
+    statusTextEl.textContent = text;
+    document.body.dataset.status = kind;
+  }
+
+  function formatTime(v) {
+    if (!v) return "—";
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return String(v);
+    const p = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
+  function loadPrefs() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      if (p.scope) scopeEl.value = p.scope;
+      if (typeof p.query === "string") queryEl.value = p.query;
+      if (p.max) maxEl.value = String(p.max);
+      if (p.interval !== undefined) intervalEl.value = String(p.interval);
+    } catch {}
+  }
+
+  function savePrefs() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      scope: scopeEl.value,
+      query: queryEl.value.trim(),
+      max: Number(maxEl.value),
+      interval: Number(intervalEl.value)
+    }));
+  }
+
+  function buildGdeltUrl() {
+    const scope = scopeEl.value;
+    const max = Number(maxEl.value) || 30;
+    const q = queryEl.value.trim();
+
+    const baseQuery = q.length ? q : "(全球 OR 国际 OR 世界 OR 经济 OR 科技 OR 冲突 OR 外交)";
+    const scopedQuery = scope === "all" ? baseQuery : `${baseQuery} sourcelang:Chinese`;
+
+    const u = new URL("https://api.gdeltproject.org/api/v2/doc/doc");
+    u.searchParams.set("query", scopedQuery);
+    u.searchParams.set("mode", "ArtList");
+    u.searchParams.set("format", "json");
+    u.searchParams.set("sort", "datedesc");
+    u.searchParams.set("maxrecords", String(Math.min(Math.max(max, 5), 100)));
+    return u.toString();
+  }
+
+  function render(items) {
+    const frag = document.createDocumentFragment();
+    for (const a of items) {
+      const node = tpl.content.cloneNode(true);
+      const card = node.querySelector(".card");
+      const link = node.querySelector(".cardLink");
+      link.href = a.url;
+
+      node.querySelector(".headline").textContent = a.title || a.url;
+      node.querySelector(".domain").textContent = a.domain || "未知来源";
+      node.querySelector(".country").textContent = a.sourceCountry ? `国家/地区：${a.sourceCountry}` : "来源未知";
+      node.querySelector(".time").textContent = formatTime(a.seendate);
+
+      if (!lastUrls.has(a.url)) card.dataset.new = "1";
+      frag.appendChild(node);
+    }
+    listEl.replaceChildren(frag);
+    lastUrls = new Set(items.map(x => x.url).filter(Boolean));
+  }
+
+  async function refresh() {
+    savePrefs();
+    if (inflight) inflight.abort();
+    inflight = new AbortController();
+
+    setStatus("正在获取最新播报…", "loading");
+    updatedAtEl.textContent = "—";
+
+    try {
+      const url = buildGdeltUrl();
+      const res = await fetch(url, { signal: inflight.signal, cache: "no-store" });
+      const data = await res.json();
+
+      const items = Array.isArray(data.articles) ? data.articles : [];
+      const filtered = items
+        .map(x => ({ title: x.title, url: x.url, domain: x.domain, sourceCountry: x.sourceCountry, seendate: x.seendate }))
+        .filter(x => x.url);
+
+      render(filtered);
+      setStatus(`已更新：${filtered.length} 条`, "ok");
+      updatedAtEl.textContent = `更新时间：${formatTime(new Date().toISOString())}`;
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      setStatus(`请求失败：${String(e && e.message ? e.message : e)}`, "error");
+      updatedAtEl.textContent = "提示：如果是 CORS 报错，需要加后端代理（GitHub Pages 无法跑后端）";
+    }
+  }
+
+  function setupAutoRefresh() {
+    if (timer) clearInterval(timer);
+    timer = null;
+    const seconds = Number(intervalEl.value);
+    if (!seconds) return;
+    timer = setInterval(refresh, seconds * 1000);
+  }
+
+  function bind() {
+    refreshBtn.addEventListener("click", refresh);
+    for (const c of [scopeEl, maxEl, intervalEl]) {
+      c.addEventListener("change", () => { setupAutoRefresh(); refresh(); });
+    }
+    queryEl.addEventListener("keydown", (e) => { if (e.key === "Enter") refresh(); });
+    queryEl.addEventListener("blur", savePrefs);
+  }
+
+  loadPrefs();
+  bind();
+  setupAutoRefresh();
+  refresh();
+</script>
+</body>
+</html>
