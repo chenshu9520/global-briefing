@@ -1,308 +1,475 @@
 <!doctype html>
-<html lang="zh-Hans">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>全球实时播报</title>
-  <meta name="description" content="全球实时新闻播报（GitHub Pages 版），自动刷新，可点开原文。" />
-  <style>
-    :root{
-      --bg:#0b1020;--panel:rgba(255,255,255,.06);--line:rgba(255,255,255,.12);
-      --text:rgba(255,255,255,.92);--muted:rgba(255,255,255,.62);
-      --accent:#7c5cff;--ok:#22c55e;--err:#ef4444;--r:16px;--rs:12px;
-      --shadow:0 14px 40px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; color:var(--text);
-      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
-      background:
-        radial-gradient(1000px 400px at 10% 10%, rgba(124,92,255,.28), transparent 55%),
-        radial-gradient(900px 420px at 90% 0%, rgba(34,197,94,.18), transparent 60%),
-        radial-gradient(900px 600px at 50% 100%, rgba(59,130,246,.16), transparent 60%),
-        var(--bg);
-      min-height:100vh;
-    }
-    header{
-      position:sticky; top:0; z-index:10;
-      backdrop-filter:blur(10px);
-      background:linear-gradient(to bottom, rgba(11,16,32,.92), rgba(11,16,32,.65));
-      border-bottom:1px solid var(--line);
-    }
-    .wrap{max-width:1100px;margin:0 auto;padding:18px}
-    .brand{display:flex;gap:14px;align-items:center}
-    .logo{
-      width:42px;height:42px;border-radius:14px;
-      background:radial-gradient(circle at 30% 25%, rgba(255,255,255,.5), transparent 45%),
-               linear-gradient(135deg, rgba(124,92,255,1), rgba(34,197,94,.9));
-      box-shadow:var(--shadow); border:1px solid rgba(255,255,255,.18);
-    }
-    h1{margin:0;font-size:20px}
-    .sub{margin:4px 0 0;color:var(--muted);font-size:13px}
-    .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-top:12px}
-    label{display:grid;gap:6px;min-width:140px}
-    label.grow{flex:1 1 260px;min-width:220px}
-    label span{font-size:12px;color:var(--muted)}
-    select,input{
-      height:40px;border-radius:var(--rs);border:1px solid var(--line);
-      background:rgba(255,255,255,.06);color:var(--text);padding:0 12px;outline:none
-    }
-    input::placeholder{color:rgba(255,255,255,.45)}
-    .btn{
-      height:40px;border-radius:var(--rs);border:1px solid rgba(255,255,255,.16);
-      background:linear-gradient(135deg, rgba(124,92,255,1), rgba(124,92,255,.75));
-      color:#fff;padding:0 14px;cursor:pointer;
-      box-shadow:0 10px 24px rgba(124,92,255,.18);
-    }
-    main{max-width:1100px;margin:0 auto;padding:18px}
-    .status{
-      display:flex;gap:10px;align-items:center;padding:12px 14px;
-      border:1px solid var(--line);background:var(--panel);border-radius:var(--r)
-    }
-    .dot{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.35)}
-    body[data-status="loading"] .dot{background:var(--accent)}
-    body[data-status="ok"] .dot{background:var(--ok)}
-    body[data-status="error"] .dot{background:var(--err)}
-    .muted{color:var(--muted);font-size:13px}
-    ol{list-style:none;padding:0;margin:14px 0 40px;display:grid;grid-template-columns:1fr;gap:12px}
-    @media (min-width:920px){ol{grid-template-columns:1fr 1fr}}
-    .card{
-      border:1px solid var(--line);
-      background:linear-gradient(to bottom, var(--panel), rgba(255,255,255,.03));
-      border-radius:var(--r);overflow:hidden;
-      box-shadow:0 10px 30px rgba(0,0,0,.22);
-    }
-    .card[data-new="1"]{border-color:rgba(34,197,94,.45);box-shadow:0 10px 30px rgba(34,197,94,.12)}
-    a{display:block;padding:14px 14px 16px;text-decoration:none;color:inherit}
-    .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-    .badge{font-size:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:4px 8px;border-radius:999px}
-    time{margin-left:auto;font-size:12px;color:var(--muted)}
-    h2{margin:0;font-size:16px;line-height:1.45}
-    .hint{margin-top:10px;color:rgba(255,255,255,.68);font-size:13px}
-  </style>
-</head>
-<body data-status="idle">
-<header>
-  <div class="wrap">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div>
-        <h1>全球实时播报</h1>
-        <p class="sub">GitHub Pages 静态部署 · 自动刷新 · 点击直达原文 · 数据源：GDELT</p>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>全球实时播报</title>
+    <style>
+      :root{
+        --bg0:#070a14;
+        --bg1:#0b1533;
+        --card: rgba(255,255,255,.06);
+        --card2: rgba(255,255,255,.08);
+        --stroke: rgba(255,255,255,.12);
+        --stroke2: rgba(255,255,255,.18);
+        --text: rgba(255,255,255,.92);
+        --muted: rgba(255,255,255,.70);
+        --muted2: rgba(255,255,255,.55);
+        --ok: #67e8f9;
+        --err: #fb7185;
+        --warn: #fbbf24;
+        --btn: #7c3aed;
+        --btn2:#4f46e5;
+        --shadow: 0 20px 60px rgba(0,0,0,.55);
+        --r: 18px;
+      }
+      *{ box-sizing: border-box; }
+      body{
+        margin:0;
+        min-height:100vh;
+        color:var(--text);
+        font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background:
+          radial-gradient(1200px 700px at 20% -10%, rgba(124,58,237,.55), transparent 60%),
+          radial-gradient(900px 600px at 70% 0%, rgba(79,70,229,.45), transparent 55%),
+          radial-gradient(900px 700px at 40% 120%, rgba(103,232,249,.25), transparent 60%),
+          linear-gradient(180deg, var(--bg0), var(--bg1));
+      }
+      .wrap{ max-width: 1200px; margin: 24px auto; padding: 0 16px 48px; }
+      header{
+        display:flex; align-items:center; gap:14px;
+        padding: 10px 4px 18px;
+      }
+      .logo{
+        width:38px; height:38px; border-radius: 12px;
+        background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.9), rgba(255,255,255,.05) 45%),
+                    linear-gradient(135deg, rgba(103,232,249,.75), rgba(124,58,237,.85));
+        box-shadow: 0 10px 30px rgba(124,58,237,.25);
+      }
+      h1{ margin:0; font-size: 20px; letter-spacing: .5px; }
+      .sub{ margin-top: 2px; color: var(--muted2); font-size: 12px; }
+      .panel{
+        display:flex; flex-wrap: wrap; gap: 12px;
+        align-items: end;
+        padding: 14px;
+        background: var(--card);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(14px);
+      }
+      .field{ display:flex; flex-direction: column; gap: 6px; min-width: 180px; }
+      .field.wide{ flex: 1 1 420px; min-width: 260px; }
+      label{ color: var(--muted); font-size: 12px; }
+      select, input{
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid var(--stroke2);
+        outline: none;
+        background: rgba(0,0,0,.18);
+        color: var(--text);
+        padding: 0 12px;
+      }
+      input::placeholder{ color: rgba(255,255,255,.35); }
+      select:focus, input:focus{ border-color: rgba(103,232,249,.55); box-shadow: 0 0 0 3px rgba(103,232,249,.12); }
+      .actions{ display:flex; gap: 10px; align-items:center; }
+      button{
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(124,58,237,.45);
+        background: linear-gradient(135deg, var(--btn), var(--btn2));
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 16px 38px rgba(79,70,229,.18);
+      }
+      button:disabled{ opacity: .6; cursor: not-allowed; }
+      .status{
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: var(--r);
+        border: 1px solid var(--stroke);
+        background: rgba(0,0,0,.18);
+        backdrop-filter: blur(12px);
+        display:flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      }
+      .dot{
+        width: 8px; height: 8px; border-radius: 999px;
+        background: rgba(255,255,255,.35);
+      }
+      .dot.ok{ background: var(--ok); }
+      .dot.err{ background: var(--err); }
+      .dot.warn{ background: var(--warn); }
+      .status strong{ font-weight: 700; }
+      .muted{ color: var(--muted2); }
+      .list{
+        margin-top: 14px;
+        display:grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .item{
+        padding: 14px 14px 12px;
+        border-radius: var(--r);
+        border: 1px solid var(--stroke);
+        background: rgba(255,255,255,.05);
+        backdrop-filter: blur(12px);
+      }
+      .item a{
+        color: var(--text);
+        text-decoration: none;
+      }
+      .item a:hover{ text-decoration: underline; }
+      .meta{
+        margin-top: 6px;
+        color: var(--muted2);
+        font-size: 12px;
+        display:flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .pill{
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(0,0,0,.14);
+      }
+      .foot{
+        margin-top: 10px;
+        color: var(--muted2);
+        font-size: 12px;
+      }
+      @media (min-width: 980px){
+        .list{ grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>全球实时播报</h1>
+          <div class="sub">GitHub Pages 静态部署 · 自动刷新 · 点击直达原文 · 数据源：GDELT</div>
+        </div>
+      </header>
+
+      <div class="panel">
+        <div class="field">
+          <label for="scope">范围</label>
+          <select id="scope">
+            <option value="zh" selected>中文来源（推荐）</option>
+            <option value="en">英文来源</option>
+            <option value="all">全部来源</option>
+          </select>
+        </div>
+
+        <div class="field wide">
+          <label for="kw">关键字</label>
+          <input id="kw" placeholder="例如：中东 / AI / 经济（用空格或 / 分隔）" />
+        </div>
+
+        <div class="field">
+          <label for="max">条数</label>
+          <select id="max">
+            <option>10</option>
+            <option selected>30</option>
+            <option>50</option>
+            <option>100</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="interval">刷新</label>
+          <select id="interval">
+            <option value="0">关闭</option>
+            <option value="15" selected>15 秒</option>
+            <option value="30">30 秒</option>
+            <option value="60">60 秒</option>
+            <option value="120">120 秒</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button id="refreshBtn">立即刷新</button>
+        </div>
+      </div>
+
+      <div class="status">
+        <div id="dot" class="dot"></div>
+        <div id="statusText"><strong>就绪</strong> <span class="muted">· 等待刷新</span></div>
+        <div class="muted" id="updatedAt" style="margin-left:auto;"></div>
+      </div>
+
+      <div class="list" id="list"></div>
+      <div class="foot muted">
+        提示：如果出现 “Query OR clause too short” 类报错，通常是关键词里包含过短的英文词（如 AI），本页面会自动忽略或展开它们。
       </div>
     </div>
 
-    <div class="controls" aria-label="筛选与刷新设置">
-      <label>
-        <span>范围</span>
-        <select id="scope">
-          <option value="zh" selected>中文来源（推荐）</option>
-          <option value="all">全部语言来源</option>
-        </select>
-      </label>
+    <script>
+      const scopeEl = document.getElementById("scope");
+      const kwEl = document.getElementById("kw");
+      const maxEl = document.getElementById("max");
+      const intervalEl = document.getElementById("interval");
+      const refreshBtn = document.getElementById("refreshBtn");
+      const listEl = document.getElementById("list");
+      const statusTextEl = document.getElementById("statusText");
+      const dotEl = document.getElementById("dot");
+      const updatedAtEl = document.getElementById("updatedAt");
 
-      <label class="grow">
-        <span>关键词</span>
-        <input id="query" type="text" placeholder="例如：中东 / AI / 经济" />
-      </label>
+      let inflight = null;
+      let timer = null;
+      let lastIgnored = [];
 
-      <label>
-        <span>条数</span>
-        <select id="max">
-          <option value="20">20</option>
-          <option value="30" selected>30</option>
-          <option value="50">50</option>
-          <option value="80">80</option>
-        </select>
-      </label>
+      function setStatus(text, level) {
+        const safe = String(text || "");
+        const lvl = level || "idle";
+        dotEl.className = "dot" + (lvl === "ok" ? " ok" : lvl === "error" ? " err" : lvl === "warn" ? " warn" : "");
+        statusTextEl.innerHTML = safe;
+      }
 
-      <label>
-        <span>刷新</span>
-        <select id="interval">
-          <option value="0">手动</option>
-          <option value="15" selected>15 秒</option>
-          <option value="30">30 秒</option>
-          <option value="60">60 秒</option>
-        </select>
-      </label>
+      function formatTime(dt) {
+        try {
+          const d = (dt instanceof Date) ? dt : new Date(dt);
+          return d.toLocaleString();
+        } catch {
+          return String(dt || "");
+        }
+      }
 
-      <button id="refresh" class="btn" type="button">立即刷新</button>
-    </div>
-  </div>
-</header>
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
 
-<main>
-  <div class="status" role="status" aria-live="polite">
-    <span id="statusText">准备就绪</span>
-    <span class="dot" aria-hidden="true"></span>
-    <span id="updatedAt" class="muted">—</span>
-  </div>
+      function savePrefs() {
+        const prefs = {
+          scope: scopeEl.value,
+          kw: kwEl.value,
+          max: maxEl.value,
+          interval: intervalEl.value,
+        };
+        localStorage.setItem("gb:prefs", JSON.stringify(prefs));
+      }
 
-  <ol id="list" aria-label="播报列表"></ol>
-</main>
+      function loadPrefs() {
+        try {
+          const raw = localStorage.getItem("gb:prefs");
+          if (!raw) return;
+          const p = JSON.parse(raw);
+          if (p.scope) scopeEl.value = p.scope;
+          if (typeof p.kw === "string") kwEl.value = p.kw;
+          if (p.max) maxEl.value = p.max;
+          if (p.interval) intervalEl.value = p.interval;
+        } catch {}
+      }
 
-<template id="tpl">
-  <li class="card">
-    <a class="cardLink" target="_blank" rel="noopener noreferrer">
-      <div class="meta">
-        <span class="badge domain"></span>
-        <span class="badge country"></span>
-        <time class="time"></time>
-      </div>
-      <h2 class="headline"></h2>
-      <div class="hint">打开原报道页面 →</div>
-    </a>
-  </li>
-</template>
+      function gdeltDateTime(d) {
+        const pad = (n) => String(n).padStart(2, "0");
+        const yyyy = d.getUTCFullYear();
+        const mm = pad(d.getUTCMonth() + 1);
+        const dd = pad(d.getUTCDate());
+        const HH = pad(d.getUTCHours());
+        const MM = pad(d.getUTCMinutes());
+        const SS = pad(d.getUTCSeconds());
+        return `${yyyy}${mm}${dd}${HH}${MM}${SS}`;
+      }
 
-<script>
-  const el = (id) => document.getElementById(id);
-  const scopeEl = el("scope");
-  const queryEl = el("query");
-  const maxEl = el("max");
-  const intervalEl = el("interval");
-  const refreshBtn = el("refresh");
-  const statusTextEl = el("statusText");
-  const updatedAtEl = el("updatedAt");
-  const listEl = el("list");
-  const tpl = el("tpl");
+      function normalizeKeywords(rawKw) {
+        const ignored = [];
+        const mapped = [];
 
-  const STORAGE_KEY = "global-briefing:ghpages:v1";
-  let timer = null;
-  let inflight = null;
-  let lastUrls = new Set();
+        const chunks = String(rawKw || "")
+          .split(/[\/|,，\s]+/)
+          .map((s) => s.trim())
+          .filter(Boolean);
 
-  function setStatus(text, kind = "idle") {
-    statusTextEl.textContent = text;
-    document.body.dataset.status = kind;
-  }
+        for (const t0 of chunks) {
+          const t = t0.replaceAll("“", '"').replaceAll("”", '"').trim();
+          const upper = t.toUpperCase();
 
-  function formatTime(v) {
-    if (!v) return "—";
-    const d = new Date(v);
-    if (Number.isNaN(d.getTime())) return String(v);
-    const p = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
-  }
+          // 展开常见短词（避免 GDELT 报 "Query OR clause too short"）
+          if (upper === "AI") {
+            mapped.push("artificial intelligence");
+            continue;
+          }
 
-  function loadPrefs() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const p = JSON.parse(raw);
-      if (p.scope) scopeEl.value = p.scope;
-      if (typeof p.query === "string") queryEl.value = p.query;
-      if (p.max) maxEl.value = String(p.max);
-      if (p.interval !== undefined) intervalEl.value = String(p.interval);
-    } catch {}
-  }
+          // 过滤纯英文/数字且太短的 token（例如 AI/US/UK）
+          if (/^[A-Za-z0-9]+$/.test(t) && t.length < 3) {
+            ignored.push(t);
+            continue;
+          }
 
-  function savePrefs() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      scope: scopeEl.value,
-      query: queryEl.value.trim(),
-      max: Number(maxEl.value),
-      interval: Number(intervalEl.value)
-    }));
-  }
+          mapped.push(t);
+        }
 
-  function buildGdeltUrl() {
-    const scope = scopeEl.value;
-    const max = Number(maxEl.value) || 30;
-    const q = queryEl.value.trim();
+        return { terms: mapped, ignored };
+      }
 
-    const baseQuery = q.length ? q : "(全球 OR 国际 OR 世界 OR 经济 OR 科技 OR 冲突 OR 外交)";
-    const scopedQuery = scope === "all" ? baseQuery : `(${baseQuery}) AND sourcelang:Chinese`;
+      function buildScopeQuery(scope) {
+        if (scope === "zh") return "sourcelang:Chinese";
+        if (scope === "en") return "sourcelang:English";
+        return "";
+      }
 
-    const u = new URL("https://api.gdeltproject.org/api/v2/doc/doc");
-    u.searchParams.set("query", scopedQuery);
-    u.searchParams.set("mode", "ArtList");
-    u.searchParams.set("format", "json");
-    u.searchParams.set("sort", "datedesc");
-    u.searchParams.set("maxrecords", String(Math.min(Math.max(max, 5), 100)));
-    return u.toString();
-  }
+      function buildGdeltUrl() {
+        const endpoint = "https://api.gdeltproject.org/api/v2/doc/doc";
+        const url = new URL(endpoint);
 
-  function render(items) {
-    const frag = document.createDocumentFragment();
-    for (const a of items) {
-      const node = tpl.content.cloneNode(true);
-      const card = node.querySelector(".card");
-      const link = node.querySelector(".cardLink");
-      link.href = a.url;
+        const scopeQuery = buildScopeQuery(scopeEl.value);
+        const { terms, ignored } = normalizeKeywords(kwEl.value);
+        lastIgnored = ignored;
 
-      node.querySelector(".headline").textContent = a.title || a.url;
-      node.querySelector(".domain").textContent = a.domain || "未知来源";
-      node.querySelector(".country").textContent = a.sourceCountry ? `国家/地区：${a.sourceCountry}` : "来源未知";
-      node.querySelector(".time").textContent = formatTime(a.seendate);
+        const quoted = terms.map((t) => `"${t.replaceAll('"', "")}"`).filter(Boolean);
+        const kwQuery = quoted.length ? `(${quoted.join(" OR ")})` : "";
 
-      if (!lastUrls.has(a.url)) card.dataset.new = "1";
-      frag.appendChild(node);
-    }
-    listEl.replaceChildren(frag);
-    lastUrls = new Set(items.map(x => x.url).filter(Boolean));
-  }
+        const query = [kwQuery, scopeQuery].filter(Boolean).join(" ").trim();
+        if (!query) {
+          // 给一个保底查询，避免空 query
+          url.searchParams.set("query", "sourcelang:Chinese");
+        } else {
+          url.searchParams.set("query", query);
+        }
 
-  async function refresh() {
-    savePrefs();
-    if (inflight) inflight.abort();
-    inflight = new AbortController();
+        // 时间窗口：最近 24 小时（可按需改大/改小）
+        const hours = 24;
+        const end = new Date();
+        const start = new Date(Date.now() - hours * 3600 * 1000);
+        url.searchParams.set("startdatetime", gdeltDateTime(start));
+        url.searchParams.set("enddatetime", gdeltDateTime(end));
 
-    setStatus("正在获取最新播报…", "loading");
-    updatedAtEl.textContent = "—";
+        url.searchParams.set("mode", "ArtList");
+        url.searchParams.set("format", "json");
+        url.searchParams.set("sort", "datedesc");
+        url.searchParams.set("maxrecords", String(parseInt(maxEl.value, 10) || 30));
 
-    try {
-    const url = buildGdeltUrl();
-const res = await fetch(url, { signal: inflight.signal, cache: "no-store" });
+        return url.toString();
+      }
 
-const raw = await res.text();
-if (!res.ok) {
-  throw new Error(`GDELT ${res.status}: ${raw.slice(0, 200)}`);
-}
+      function render(items) {
+        if (!items.length) {
+          listEl.innerHTML = `<div class="item"><div class="muted">暂无结果</div></div>`;
+          return;
+        }
 
-let data;
-try {
-  data = JSON.parse(raw);
-} catch {
-  throw new Error(`GDELT返回不是JSON：${raw.slice(0, 200)}`);
-}
-      
-      const items = Array.isArray(data.articles) ? data.articles : [];
-      const filtered = items
-        .map(x => ({ title: x.title, url: x.url, domain: x.domain, sourceCountry: x.sourceCountry, seendate: x.seendate }))
-        .filter(x => x.url);
+        listEl.innerHTML = items
+          .map((x) => {
+            const title = escapeHtml(x.title || "(无标题)");
+            const url = escapeHtml(x.url || "");
+            const domain = escapeHtml(x.domain || "");
+            const country = escapeHtml(x.sourceCountry || "");
+            const seen = escapeHtml(x.seendate || "");
+            const t = seen ? formatTime(seen) : "";
+            return `
+              <div class="item">
+                <div><a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a></div>
+                <div class="meta">
+                  ${domain ? `<span class="pill">${domain}</span>` : ""}
+                  ${country ? `<span class="pill">${country}</span>` : ""}
+                  ${t ? `<span class="pill">${escapeHtml(t)}</span>` : ""}
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
 
-      render(filtered);
-      setStatus(`已更新：${filtered.length} 条`, "ok");
-      updatedAtEl.textContent = `更新时间：${formatTime(new Date().toISOString())}`;
-    } catch (e) {
-      if (e && e.name === "AbortError") return;
-      setStatus(`请求失败：${String(e && e.message ? e.message : e)}`, "error");
-      updatedAtEl.textContent = "提示：如果是 CORS 报错，需要加后端代理（GitHub Pages 无法跑后端）";
-    }
-  }
+      function restartTimer() {
+        if (timer) {
+          clearInterval(timer);
+          timer = null;
+        }
+        const sec = parseInt(intervalEl.value, 10) || 0;
+        if (sec > 0) {
+          timer = setInterval(() => refresh(), sec * 1000);
+        }
+      }
 
-  function setupAutoRefresh() {
-    if (timer) clearInterval(timer);
-    timer = null;
-    const seconds = Number(intervalEl.value);
-    if (!seconds) return;
-    timer = setInterval(refresh, seconds * 1000);
-  }
+      async function refresh() {
+        savePrefs();
+        if (inflight) inflight.abort();
+        inflight = new AbortController();
 
-  function bind() {
-    refreshBtn.addEventListener("click", refresh);
-    for (const c of [scopeEl, maxEl, intervalEl]) {
-      c.addEventListener("change", () => { setupAutoRefresh(); refresh(); });
-    }
-    queryEl.addEventListener("keydown", (e) => { if (e.key === "Enter") refresh(); });
-    queryEl.addEventListener("blur", savePrefs);
-  }
+        updatedAtEl.textContent = "";
+        setStatus(`<strong>正在获取最新播报…</strong> <span class="muted">· loading</span>`, "warn");
+        refreshBtn.disabled = true;
 
-  loadPrefs();
-  bind();
-  setupAutoRefresh();
-  refresh();
-</script>
-</body>
+        try {
+          const url = buildGdeltUrl();
+          const res = await fetch(url, { signal: inflight.signal, cache: "no-store" });
+
+          const raw = await res.text();
+
+          if (!res.ok) {
+            throw new Error(`GDELT ${res.status}: ${raw.slice(0, 240)}`);
+          }
+
+          const t = raw.trimStart();
+          if (!(t.startsWith("{") || t.startsWith("["))) {
+            throw new Error(`GDELT返回不是JSON：${raw.slice(0, 240)}`);
+          }
+
+          let data;
+          try {
+            data = JSON.parse(raw);
+          } catch {
+            throw new Error(`GDELT返回不是JSON：${raw.slice(0, 240)}`);
+          }
+
+          const items = Array.isArray(data.articles) ? data.articles : [];
+          const filtered = items
+            .map((x) => ({
+              title: x.title,
+              url: x.url,
+              domain: x.domain,
+              sourceCountry: x.sourceCountry,
+              seendate: x.seendate,
+            }))
+            .filter((x) => x.url);
+
+          render(filtered);
+
+          const ignoredTip = lastIgnored.length ? ` <span class="muted">· 已忽略过短关键词：${escapeHtml(lastIgnored.join(", "))}</span>` : "";
+          setStatus(`<strong>已更新：${filtered.length} 条</strong><span class="muted">· ok</span>${ignoredTip}`, "ok");
+          updatedAtEl.textContent = `更新时间：${formatTime(new Date())}`;
+        } catch (e) {
+          if (e && e.name === "AbortError") return;
+          const msg = (e && e.message) ? e.message : String(e);
+          setStatus(`<strong>请求失败：</strong> ${escapeHtml(msg)} <span class="muted">· 提示：如果是 CORS 报错，需要加前端代理（GitHub Pages 无法跑后端）</span>`, "error");
+        } finally {
+          refreshBtn.disabled = false;
+        }
+      }
+
+      // init
+      loadPrefs();
+      restartTimer();
+      refresh();
+
+      scopeEl.addEventListener("change", () => { savePrefs(); refresh(); });
+      maxEl.addEventListener("change", () => { savePrefs(); refresh(); });
+      intervalEl.addEventListener("change", () => { savePrefs(); restartTimer(); });
+
+      refreshBtn.addEventListener("click", () => refresh());
+
+      // 回车刷新
+      kwEl.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") refresh();
+      });
+
+      // 输入停顿后刷新（简单防抖）
+      let kwDebounce = null;
+      kwEl.addEventListener("input", () => {
+        savePrefs();
+        if (kwDebounce) clearTimeout(kwDebounce);
+        kwDebounce = setTimeout(() => refresh(), 600);
+      });
+    </script>
+  </body>
 </html>
