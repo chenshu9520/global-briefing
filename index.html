@@ -212,7 +212,7 @@
     const q = queryEl.value.trim();
 
     const baseQuery = q.length ? q : "(全球 OR 国际 OR 世界 OR 经济 OR 科技 OR 冲突 OR 外交)";
-    const scopedQuery = scope === "all" ? baseQuery : `${baseQuery} sourcelang:Chinese`;
+    const scopedQuery = scope === "all" ? baseQuery : `(${baseQuery}) AND sourcelang:Chinese`;
 
     const u = new URL("https://api.gdeltproject.org/api/v2/doc/doc");
     u.searchParams.set("query", scopedQuery);
@@ -252,10 +252,21 @@
     updatedAtEl.textContent = "—";
 
     try {
-      const url = buildGdeltUrl();
-      const res = await fetch(url, { signal: inflight.signal, cache: "no-store" });
-      const data = await res.json();
+    const url = buildGdeltUrl();
+const res = await fetch(url, { signal: inflight.signal, cache: "no-store" });
 
+const raw = await res.text();
+if (!res.ok) {
+  throw new Error(`GDELT ${res.status}: ${raw.slice(0, 200)}`);
+}
+
+let data;
+try {
+  data = JSON.parse(raw);
+} catch {
+  throw new Error(`GDELT返回不是JSON：${raw.slice(0, 200)}`);
+}
+      
       const items = Array.isArray(data.articles) ? data.articles : [];
       const filtered = items
         .map(x => ({ title: x.title, url: x.url, domain: x.domain, sourceCountry: x.sourceCountry, seendate: x.seendate }))
