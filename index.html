@@ -4,10 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>全球实时播报</title>
-    <meta name="description" content="全球实时新闻播报（大字护眼版）：只显示10条，30秒轮转一条，新消息永远置顶。" />
+    <meta name="description" content="全球实时新闻播报（大字护眼版）：只显示10条，轮转置顶，新消息永远在第一条；附IP与当地天气。" />
     <style>
       :root{
-        /* 护眼深色 */
         --bg0:#04050b;
         --bg1:#070a16;
         --bg2:#0a1330;
@@ -44,7 +43,6 @@
         --pad: 16px;
       }
 
-      /* 字体模式：标准 / 大字 / 超大字 */
       body[data-font="m"]{
         --fs: 18px;
         --item-title: 22px;
@@ -131,7 +129,12 @@
         box-shadow: 0 0 0 4px rgba(103,232,249,.10);
       }
 
-      .actions{ display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
+      .actions{
+        display:flex;
+        gap: 10px;
+        align-items:center;
+        flex-wrap: wrap;
+      }
       button{
         height: var(--btn-h);
         padding: 0 16px;
@@ -139,7 +142,7 @@
         border: 1px solid rgba(124,58,237,.45);
         background: linear-gradient(135deg, var(--btn), var(--btn2));
         color: white;
-        font-weight: 800;
+        font-weight: 900;
         font-size: 16px;
         cursor: pointer;
         box-shadow: 0 14px 34px rgba(79,70,229,.16);
@@ -148,7 +151,7 @@
         background: rgba(0,0,0,.22);
         border: 1px solid rgba(255,255,255,.18);
         box-shadow: none;
-        font-weight: 700;
+        font-weight: 800;
       }
       button:disabled{ opacity: .6; cursor: not-allowed; }
 
@@ -166,10 +169,55 @@
         background: transparent;
         box-shadow: none;
         padding: 0 12px;
-        font-weight: 800;
+        font-weight: 900;
       }
       .seg button.active{
         background: rgba(255,255,255,.10);
+      }
+
+      /* 右侧 IP/天气 信息框（对应你截图红框区域） */
+      .infoBox{
+        flex: 1 1 360px;
+        min-width: 320px;
+        height: var(--btn-h);
+        display:flex;
+        align-items:center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 0 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,.16);
+        background: rgba(0,0,0,.18);
+        overflow:hidden;
+      }
+      .infoLeft{
+        display:flex;
+        align-items:center;
+        gap: 10px;
+        min-width: 0;
+      }
+      .miniDot{
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.35);
+      }
+      .miniDot.ok{ background: var(--ok); }
+      .miniDot.err{ background: var(--err); }
+      .miniDot.warn{ background: var(--warn); }
+      .infoText{
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 15px;
+        color: rgba(255,255,255,.86);
+      }
+      .infoRight{
+        flex: 0 0 auto;
+        font-size: 14px;
+        color: var(--muted2);
+        white-space: nowrap;
       }
 
       .status{
@@ -188,10 +236,9 @@
       .dot.ok{ background: var(--ok); }
       .dot.err{ background: var(--err); }
       .dot.warn{ background: var(--warn); }
-      .status strong{ font-weight: 900; }
+      .status strong{ font-weight: 950; }
       .muted{ color: var(--muted2); }
 
-      /* 每排一条：条纹大卡片 */
       .list{
         margin-top: 14px;
         display:grid;
@@ -207,7 +254,6 @@
           rgba(255,255,255,.05);
         backdrop-filter: blur(12px);
         box-shadow: 0 12px 36px rgba(0,0,0,.30);
-        position: relative;
         overflow:hidden;
       }
       .item[data-new="1"]{
@@ -219,7 +265,7 @@
         color: var(--text);
         text-decoration: none;
         font-size: var(--item-title);
-        font-weight: 900;
+        font-weight: 950;
         line-height: 1.45;
         letter-spacing: .2px;
       }
@@ -253,6 +299,7 @@
       @media (max-width: 520px){
         .field{ min-width: 160px; }
         .field.wide{ min-width: 240px; }
+        .infoBox{ min-width: 260px; }
       }
     </style>
   </head>
@@ -262,8 +309,8 @@
       <header>
         <div class="logo" aria-hidden="true"></div>
         <div>
-          <h1>全球实时播报（10条轮播）</h1>
-          <div class="sub">每 30 秒置顶一条新标题 · 点击直达原文 · 数据源：GDELT</div>
+          <h1>全球实时播报</h1>
+          <div class="sub">只显示 10 条 · 每隔 N 秒置顶 1 条新标题 · 点击直达原文 · 数据源：GDELT</div>
         </div>
       </header>
 
@@ -302,6 +349,15 @@
             <button id="fontXL" type="button">超大字</button>
           </div>
         </div>
+
+        <!-- 红框位置：IP + 当地天气 -->
+        <div class="infoBox" id="ipWeatherBox" title="IP与天气仅用于本地显示">
+          <div class="infoLeft">
+            <div class="miniDot warn" id="ipWeatherDot"></div>
+            <div class="infoText" id="ipWeatherText">IP/天气：加载中…</div>
+          </div>
+          <div class="infoRight" id="ipWeatherTime"></div>
+        </div>
       </div>
 
       <div class="status">
@@ -313,15 +369,15 @@
       <div class="list" id="list"></div>
 
       <div class="foot muted">
-        说明：页面只展示 10 条；每次轮播会把“新标题”放到第一条，旧的自动往下挤掉。关键词里如果有过短英文（如 AI/US），会自动忽略或展开，避免接口报错。
+        说明：页面固定展示 10 条；轮播会把新标题放到第 1 条，旧的自动往下挤掉。关键词里如果有过短英文（如 AI/US），会自动忽略或展开，避免接口报错。
       </div>
     </div>
 
     <script>
-      const PREF_KEY = "gb:prefs:v2";
+      const PREF_KEY = "gb:prefs:v3";
 
       const DISPLAY_COUNT = 10;
-      const FETCH_MAX = 50; // 拉取更多做缓冲，展示固定10条
+      const FETCH_MAX = 60;
 
       const scopeEl = document.getElementById("scope");
       const kwEl = document.getElementById("kw");
@@ -338,21 +394,30 @@
       const fontLBtn = document.getElementById("fontL");
       const fontXLBtn = document.getElementById("fontXL");
 
+      const ipWeatherDot = document.getElementById("ipWeatherDot");
+      const ipWeatherText = document.getElementById("ipWeatherText");
+      const ipWeatherTime = document.getElementById("ipWeatherTime");
+
       let inflight = null;
       let rotateTimer = null;
       let typingDebounce = null;
+      let ipWeatherTimer = null;
 
-      // buffer：候选新闻池；shown：当前显示10条；known：去重
       let buffer = [];
       let shown = [];
       const knownUrls = new Set();
-
       let lastIgnored = [];
 
       function setStatus(html, level) {
         const lvl = level || "idle";
         dotEl.className = "dot" + (lvl === "ok" ? " ok" : lvl === "error" ? " err" : lvl === "warn" ? " warn" : "");
         statusTextEl.innerHTML = String(html || "");
+      }
+
+      function setIpWeather(level, text, timeText) {
+        ipWeatherDot.className = "miniDot" + (level === "ok" ? " ok" : level === "error" ? " err" : " warn");
+        ipWeatherText.textContent = text || "";
+        ipWeatherTime.textContent = timeText || "";
       }
 
       function escapeHtml(s) {
@@ -397,21 +462,13 @@
 
       function gdeltDateTime(d) {
         const pad = (n) => String(n).padStart(2, "0");
-        const yyyy = d.getUTCFullYear();
-        const mm = pad(d.getUTCMonth() + 1);
-        const dd = pad(d.getUTCDate());
-        const HH = pad(d.getUTCHours());
-        const MM = pad(d.getUTCMinutes());
-        const SS = pad(d.getUTCSeconds());
-        return `${yyyy}${mm}${dd}${HH}${MM}${SS}`;
+        return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`;
       }
 
-      // 修复 Invalid Date：兼容 GDELT 的 seendate
       function parseGdeltSeendate(value) {
         if (!value) return null;
         const s = String(value).trim();
 
-        // 20260113185008
         if (/^\d{14}$/.test(s)) {
           const y = +s.slice(0, 4);
           const mo = +s.slice(4, 6) - 1;
@@ -422,11 +479,8 @@
           return new Date(Date.UTC(y, mo, d, h, mi, se));
         }
 
-        // 2026-01-13 18:50:08 或 2026-01-13T18:50:08
         const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
-        if (m) {
-          return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
-        }
+        if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
 
         const d = new Date(s);
         if (!Number.isNaN(d.getTime())) return d;
@@ -452,13 +506,11 @@
           const t = t0.replaceAll("“", '"').replaceAll("”", '"').trim();
           const upper = t.toUpperCase();
 
-          // 展开常见短词（避免 GDELT 报 "Query OR clause too short"）
           if (upper === "AI") {
             mapped.push("artificial intelligence");
             continue;
           }
 
-          // 过滤纯英文/数字且太短的 token（例如 AI/US/UK）
           if (/^[A-Za-z0-9]+$/.test(t) && t.length < 3) {
             ignored.push(t);
             continue;
@@ -480,14 +532,11 @@
         const t = String(term || "").trim().replaceAll('"', "");
         if (!t) return null;
 
-        // 多词短语要加引号；但太短的短语可能触发 phrase too short
         const hasSpace = /\s/.test(t);
         if (hasSpace) {
           if (t.length < 3) return null;
           return `"${t}"`;
         }
-
-        // 单个词不加引号（避免 “全球” 这种短语触发 phrase too short）
         return t;
       }
 
@@ -502,14 +551,12 @@
         const gdeltTerms = terms.map(toGdeltTerm).filter(Boolean);
         const kwQuery = gdeltTerms.length ? `(${gdeltTerms.join(" OR ")})` : "";
 
-        // 显式 AND，避免解析歧义
         let query = "";
         if (kwQuery && scopeQuery) query = `${kwQuery} AND ${scopeQuery}`;
         else query = kwQuery || scopeQuery || "sourcelang:Chinese";
 
         url.searchParams.set("query", query);
 
-        // 最近 24 小时（更“实时”可改 6/12）
         const hours = 24;
         const end = new Date();
         const start = new Date(Date.now() - hours * 3600 * 1000);
@@ -525,7 +572,6 @@
       }
 
       function articleScore(a) {
-        // 用 seendate 排序，越新越大
         const d = parseGdeltSeendate(a.seendate);
         return d ? d.getTime() : 0;
       }
@@ -573,7 +619,6 @@
       }
 
       function takeNextFromBuffer() {
-        // 从 buffer 里找一个没展示过的
         while (buffer.length) {
           const next = buffer.shift();
           if (!next?.url) continue;
@@ -584,7 +629,6 @@
           shown.unshift(next);
           if (shown.length > DISPLAY_COUNT) shown = shown.slice(0, DISPLAY_COUNT);
 
-          // 只有第一条保持 new 标记，其它清掉
           for (let i = 1; i < shown.length; i++) shown[i].__new = false;
 
           render();
@@ -618,8 +662,8 @@
 
           if (!res.ok) throw new Error(`GDELT ${res.status}: ${raw.slice(0, 240)}`);
 
-          const t = raw.trimStart();
-          if (!(t.startsWith("{") || t.startsWith("["))) {
+          const tt = raw.trimStart();
+          if (!(tt.startsWith("{") || tt.startsWith("["))) {
             throw new Error(`GDELT返回不是JSON：${raw.slice(0, 240)}`);
           }
 
@@ -633,7 +677,6 @@
           const fresh = simplifyArticles(data)
             .sort((a, b) => articleScore(b) - articleScore(a));
 
-          // 填充 knownUrls 和 buffer（去重）
           let added = 0;
           for (const it of fresh) {
             if (!it.url) continue;
@@ -643,9 +686,7 @@
             added++;
           }
 
-          // 初次填满显示区
           if (shown.length === 0) {
-            // 先从 buffer 取前 DISPLAY_COUNT 条，按时间新到旧展示
             const seed = [];
             while (seed.length < DISPLAY_COUNT && buffer.length) {
               const it = buffer.shift();
@@ -670,7 +711,7 @@
           if (e && e.name === "AbortError") return;
           const msg = e?.message ? e.message : String(e);
           setStatus(
-            `<strong>请求失败：</strong> ${escapeHtml(msg)} <span class="muted">· 提示：如果出现 Query OR clause too short，说明关键词里有过短英文（如 AI）</span>`,
+            `<strong>请求失败：</strong> ${escapeHtml(msg)} <span class="muted">· 如果出现 Query OR clause too short，说明关键词里有过短英文（如 AI）</span>`,
             "error"
           );
         } finally {
@@ -680,7 +721,6 @@
       }
 
       async function rotateOnce() {
-        // 置顶一条新标题：优先从 buffer 拿；没有就 fetch 再拿
         const ok = takeNextFromBuffer();
         if (ok) {
           setStatus(`<strong>轮播置顶：1 条</strong> <span class="muted">· 缓冲区 ${buffer.length} · 展示 ${shown.length}/10</span>`, "ok");
@@ -707,6 +747,109 @@
         if (sec > 0) rotateTimer = setInterval(() => rotateOnce(), sec * 1000);
       }
 
+      // -------- IP + 天气 --------
+      function weatherTextFromCode(code) {
+        // Open-Meteo WMO weather code（简化中文）
+        const c = Number(code);
+        if (c === 0) return "晴";
+        if (c === 1) return "多云";
+        if (c === 2) return "多云";
+        if (c === 3) return "阴";
+        if (c === 45 || c === 48) return "雾";
+        if (c === 51 || c === 53 || c === 55) return "毛毛雨";
+        if (c === 56 || c === 57) return "冻毛雨";
+        if (c === 61 || c === 63 || c === 65) return "雨";
+        if (c === 66 || c === 67) return "冻雨";
+        if (c === 71 || c === 73 || c === 75) return "雪";
+        if (c === 77) return "雪粒";
+        if (c === 80 || c === 81 || c === 82) return "阵雨";
+        if (c === 85 || c === 86) return "阵雪";
+        if (c === 95) return "雷暴";
+        if (c === 96 || c === 99) return "雷暴冰雹";
+        return "天气";
+      }
+
+      function round1(n) {
+        const x = Number(n);
+        if (!Number.isFinite(x)) return "";
+        return String(Math.round(x));
+      }
+
+      async function loadIpAndWeather() {
+        setIpWeather("warn", "IP/天气：加载中…", "");
+
+        try {
+          // 1) IP & 定位：ipwho.is（免key）
+          const ipRes = await fetch("https://ipwho.is/?lang=zh-CN", { cache: "no-store" });
+          const ipData = await ipRes.json();
+
+          if (!ipRes.ok || ipData?.success === false) {
+            const msg = ipData?.message || `IP接口错误(${ipRes.status})`;
+            throw new Error(msg);
+          }
+
+          const ip = ipData.ip || "";
+          const city = ipData.city || "";
+          const region = ipData.region || "";
+          const country = ipData.country || "";
+          const lat = ipData.latitude;
+          const lon = ipData.longitude;
+
+          const location = [country, region, city].filter(Boolean).join("·") || "未知位置";
+
+          // 2) 天气：Open-Meteo（免key）
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            setIpWeather("ok", `IP：${ip} · ${location}（无法获取经纬度，天气不可用）`, formatTime(new Date()));
+            return;
+          }
+
+          const meteo = new URL("https://api.open-meteo.com/v1/forecast");
+          meteo.searchParams.set("latitude", String(lat));
+          meteo.searchParams.set("longitude", String(lon));
+          meteo.searchParams.set("timezone", "auto");
+          meteo.searchParams.set("current", "temperature_2m,apparent_temperature,weather_code,wind_speed_10m");
+          meteo.searchParams.set("daily", "weather_code,temperature_2m_max,temperature_2m_min");
+
+          const wRes = await fetch(meteo.toString(), { cache: "no-store" });
+          const wData = await wRes.json();
+
+          if (!wRes.ok) throw new Error(`天气接口错误(${wRes.status})`);
+
+          const cur = wData?.current || {};
+          const daily = wData?.daily || {};
+
+          const temp = round1(cur.temperature_2m);
+          const feels = round1(cur.apparent_temperature);
+          const wind = round1(cur.wind_speed_10m);
+          const desc = weatherTextFromCode(cur.weather_code);
+
+          const tmax = Array.isArray(daily.temperature_2m_max) ? round1(daily.temperature_2m_max[0]) : "";
+          const tmin = Array.isArray(daily.temperature_2m_min) ? round1(daily.temperature_2m_min[0]) : "";
+          const ddesc = Array.isArray(daily.weather_code) ? weatherTextFromCode(daily.weather_code[0]) : "";
+
+          const weatherLine = `${desc}${ddesc && ddesc !== desc ? `/${ddesc}` : ""} ${temp}°C（体感${feels}°C） 风${wind}`;
+          const todayLine = (tmin && tmax) ? `今日${tmin}~${tmax}°C` : "";
+
+          setIpWeather(
+            "ok",
+            `IP：${ip} · ${location} · ${weatherLine}${todayLine ? " · " + todayLine : ""}`,
+            formatTime(new Date())
+          );
+        } catch (e) {
+          const msg = e?.message ? e.message : String(e);
+          setIpWeather("error", `IP/天气：获取失败（${msg}）`, formatTime(new Date()));
+        }
+      }
+
+      function restartIpWeatherTimer() {
+        if (ipWeatherTimer) {
+          clearInterval(ipWeatherTimer);
+          ipWeatherTimer = null;
+        }
+        // 每 30 分钟刷新一次 IP/天气
+        ipWeatherTimer = setInterval(() => loadIpAndWeather(), 30 * 60 * 1000);
+      }
+
       function bind() {
         scopeEl.addEventListener("change", async () => {
           resetStateForNewQuery();
@@ -720,7 +863,6 @@
         });
 
         refreshBtn.addEventListener("click", async () => {
-          // 手动刷新：不清空列表，只补充 buffer
           await fetchMore();
         });
 
@@ -732,7 +874,6 @@
           if (ev.key === "Enter") {
             resetStateForNewQuery();
             fetchMore();
-            return;
           }
         });
 
@@ -754,12 +895,14 @@
       loadPrefs();
       bind();
 
-      // 初次加载：拉取并填满10条，然后启动轮播
       (async function init() {
         setStatus(`<strong>正在初始化…</strong> <span class="muted">· 首次拉取中</span>`, "warn");
         render();
         await fetchMore();
         restartRotateTimer();
+
+        await loadIpAndWeather();
+        restartIpWeatherTimer();
       })();
     </script>
   </body>
